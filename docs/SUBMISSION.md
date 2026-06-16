@@ -1,4 +1,4 @@
-# FilecoinTLDR Submission Pack
+# FilecoinTLDR Submission Pack — ✅ SUBMITTED
 
 ## Project title
 
@@ -25,27 +25,27 @@ This is not hidden backend storage. The Filecoin data is the thing the user insp
 
 ## Live demo link
 
-TBD after deployment.
+https://alexniny.github.io/cid-witness/
 
 ## Repo link
 
-TBD after repository creation.
+https://github.com/AlexNiny/cid-witness
 
-## Public X post draft
+## Demo video
 
-Built CID Witness for @FilecoinTLDR Builder Challenge.
+https://alexniny.github.io/cid-witness/demo-video.html
 
-It turns a Filecoin piece CID, deal id, provider, client, or IPFS CID into a live evidence packet: storage market records, provider/client context, term status, retrieval links, and a copyable proof note.
+## Public X post
 
-Demo: TBD
-Repo: TBD
-
-Uses @Filecoin market data via public Filecoin APIs.
+https://x.com/_mounted/status/2066727622453985708
 
 ## Submission checklist
 
-- [ ] Live demo link
-- [ ] Repo link
-- [ ] Screenshot or short demo video
-- [ ] Public X post with demo link, screenshot/video, `@Filecoin`, and `@FilecoinTLDR`
-- [ ] Loops House form submitted
+- [x] Live demo link
+- [x] Repo link  
+- [x] Screenshot (uploaded to Loops House)
+- [x] Short demo/walkthrough video
+- [x] Public X post with demo link, @Filecoin, and @FilecoinTLDR
+- [x] Loops House form submitted (Step 1 - Step 2 - Step 3)
+- [x] All 3 bounties selected (1st, 2nd, 3rd Prize)
+- [x] AI Judge feedback report generated

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #0a0e17; }
+      body { font-family: "Inter", sans-serif; }
+      code, pre, .monospace { font-family: "JetBrains Mono", monospace; }
+
+      /* Palette: Dark premium tech — #0a0e17 bg, #3a82ff accent, #e0e1dd fg */
+      :root { --bg: #0a0e17; --bg2: #121a2b; --fg: #e0e1dd; --fg-dim: rgba(224,225,221,0.55); --accent: #3a82ff; --accent2: #00d4aa; --border: rgba(58,130,255,0.15); }
+
+      .scene { position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; background: var(--bg); overflow: hidden; }
+
+      /* Grid background */
+      .grid-bg {
+        position: absolute; inset: 0;
+        background-image: linear-gradient(rgba(58,130,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(58,130,255,0.04) 1px, transparent 1px);
+        background-size: 60px 60px;
+      }
+
+      /* Radial glow */
+      .glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.12; }
+      .glow-1 { width: 600px; height: 600px; background: var(--accent); top: -100px; left: -100px; }
+      .glow-2 { width: 400px; height: 400px; background: var(--accent2); bottom: -100px; right: -50px; }
+
+      /* Scene 1: Title */
+      .logo-mark {
+        position: absolute; top: 200px; left: 50%; transform: translateX(-50%);
+        width: 120px; height: 120px;
+        background: linear-gradient(135deg, var(--accent), #0055ff);
+        border-radius: 28px;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 8px 60px rgba(58,130,255,0.35);
+      }
+      .logo-mark svg { width: 64px; height: 64px; }
+      .title-main {
+        position: absolute; top: 360px; left: 0; right: 0; text-align: center;
+        font-size: 72px; font-weight: 800; color: var(--fg); letter-spacing: -0.02em;
+      }
+      .title-main span { color: var(--accent); }
+      .title-sub {
+        position: absolute; top: 455px; left: 0; right: 0; text-align: center;
+        font-size: 22px; color: var(--fg-dim); font-weight: 400;
+      }
+      .title-tag {
+        position: absolute; top: 500px; left: 50%; transform: translateX(-50%);
+        background: rgba(58,130,255,0.12); border: 1px solid rgba(58,130,255,0.25);
+        color: var(--accent); font-size: 15px; font-weight: 500; padding: 8px 24px; border-radius: 999px;
+      }
+
+      /* Scene 2: Input */
+      .input-container {
+        position: absolute; top: 280px; left: 50%; transform: translateX(-50%);
+        width: 820px;
+      }
+      .input-label { font-size: 18px; color: var(--fg-dim); margin-bottom: 16px; }
+      .input-box {
+        width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+        padding: 20px 24px; font-size: 17px; color: var(--fg); font-family: "JetBrains Mono", monospace;
+        word-break: break-all;
+      }
+      .input-box .cursor { display: inline-block; width: 2px; height: 20px; background: var(--accent); vertical-align: text-bottom; animation: blink 0.8s steps(1) infinite; }
+      @keyframes blink { 50% { opacity: 0; } }
+      .btn-check {
+        margin-top: 20px; display: inline-block;
+        background: var(--accent); color: #fff; font-size: 18px; font-weight: 600;
+        padding: 14px 40px; border-radius: 10px; border: none; cursor: pointer;
+      }
+      .scene-label {
+        position: absolute; top: 80px; left: 100px;
+        font-size: 13px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em;
+      }
+
+      /* Scene 3: Results */
+      .result-container {
+        position: absolute; top: 120px; left: 140px; right: 140px;
+      }
+      .result-head { font-size: 28px; font-weight: 700; color: var(--fg); margin-bottom: 12px; }
+      .result-status {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.3);
+        color: var(--accent2); font-size: 14px; font-weight: 600; padding: 6px 16px; border-radius: 999px;
+        margin-bottom: 32px;
+      }
+      .result-status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); }
+      .result-grid {
+        display: grid; grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+      }
+      .result-card {
+        background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+        padding: 24px;
+      }
+      .result-card .card-label { font-size: 12px; color: var(--fg-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+      .result-card .card-value { font-size: 22px; font-weight: 700; color: var(--fg); font-family: "JetBrains Mono", monospace; word-break: break-all; }
+      .result-card .card-value.small { font-size: 16px; }
+
+      /* Scene 4: Report + ending */
+      .report-box {
+        position: absolute; top: 180px; left: 200px; right: 200px;
+        background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
+        padding: 32px 36px;
+      }
+      .report-box .report-title { font-size: 16px; color: var(--fg-dim); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.06em; }
+      .report-box pre {
+        font-size: 15px; color: var(--fg); line-height: 1.7; white-space: pre-wrap;
+        font-family: "JetBrains Mono", monospace;
+      }
+      .ending-tagline {
+        position: absolute; bottom: 200px; left: 0; right: 0; text-align: center;
+        font-size: 32px; font-weight: 700; color: var(--fg);
+      }
+      .ending-tagline span { color: var(--accent); }
+      .ending-links {
+        position: absolute; bottom: 120px; left: 0; right: 0; text-align: center;
+        font-size: 16px; color: var(--fg-dim);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="32" data-width="1920" data-height="1080">
+
+      <!-- Scene 1: Title (0-6s) -->
+      <div id="scene1" class="scene clip" data-start="0" data-duration="6" data-track-index="1">
+        <div class="grid-bg"></div>
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+        </div>
+        <h1 class="title-main">CID <span>Witness</span></h1>
+        <p class="title-sub">Filecoin Evidence Composer — Builder Challenge</p>
+        <div class="title-tag">Turn CIDs into live evidence packets</div>
+      </div>
+
+      <!-- Scene 2: Input CID (6-13s) -->
+      <div id="scene2" class="scene clip" data-start="6" data-duration="7" data-track-index="2">
+        <div class="grid-bg"></div>
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <span class="scene-label">Step 1 · Query</span>
+        <div class="input-container">
+          <div class="input-label">Paste a Filecoin piece CID, deal ID, provider, client, or IPFS CID</div>
+          <div class="input-box">
+            baga6ea4seaqgd4bohelctwubfgfmxsfcajhleg5ldsoat7n64q42ru4wlnrr6ka<span class="cursor"></span>
+          </div>
+          <div class="btn-check">Check</div>
+        </div>
+      </div>
+
+      <!-- Scene 3: Results (13-23s) -->
+      <div id="scene3" class="scene clip" data-start="13" data-duration="10" data-track-index="3">
+        <div class="grid-bg"></div>
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <span class="scene-label">Step 2 · Evidence Found</span>
+        <div class="result-container">
+          <div class="result-head">Result packet</div>
+          <div class="result-status"><span class="dot"></span> Active — 777,589 epochs remaining</div>
+          <div class="result-grid">
+            <div class="result-card">
+              <div class="card-label">Provider</div>
+              <div class="card-value">f03623016</div>
+            </div>
+            <div class="result-card">
+              <div class="card-label">Client</div>
+              <div class="card-value">f03774028</div>
+            </div>
+            <div class="result-card">
+              <div class="card-label">Deal Record</div>
+              <div class="card-value">#164167877</div>
+            </div>
+            <div class="result-card">
+              <div class="card-label">Claim ID</div>
+              <div class="card-value small">124827229</div>
+            </div>
+            <div class="result-card">
+              <div class="card-label">Term Start</div>
+              <div class="card-value small">Epoch 6,107,069</div>
+            </div>
+            <div class="result-card">
+              <div class="card-label">Network</div>
+              <div class="card-value small">Mainnet</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene 4: Report + Ending (23-32s) -->
+      <div id="scene4" class="scene clip" data-start="23" data-duration="9" data-track-index="4">
+        <div class="grid-bg"></div>
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <span class="scene-label">Step 3 · Shareable Proof</span>
+        <div class="report-box">
+          <div class="report-title">Generated showcase note</div>
+          <pre>CID Witness evidence packet
+Checked: baga6ea4seaq...rr6ka
+Generated: 2026-06-16
+
+Provider: f03623016
+Client: f03774028
+Status: Active, 777,589 epochs remaining
+
+Why Filecoin: queries public storage
+market records and turns provider,
+client, CID, and term data into a
+readable verification note.</pre>
+        </div>
+        <div class="ending-tagline">Filecoin evidence, <span>instantly readable</span></div>
+        <div class="ending-links">github.com/AlexNiny/cid-witness  ·  alexniny.github.io/cid-witness</div>
+      </div>
+
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Scene 1: Title entrance (0-6s)
+      tl.from("#scene1 .logo-mark", { opacity: 0, scale: 0.5, duration: 0.6, ease: "back.out(1.7)" }, 0);
+      tl.from("#scene1 .title-main", { opacity: 0, y: 40, duration: 0.6, ease: "power2.out" }, 0.4);
+      tl.from("#scene1 .title-sub", { opacity: 0, y: 20, duration: 0.5, ease: "power2.out" }, 0.8);
+      tl.from("#scene1 .title-tag", { opacity: 0, y: 15, duration: 0.5, ease: "power2.out" }, 1.1);
+      // Ambient glow pulse
+      tl.to("#scene1 .glow-1", { opacity: 0.18, duration: 2, ease: "sine.inOut", yoyo: true, repeat: 1 }, 0);
+      tl.to("#scene1 .glow-2", { opacity: 0.18, duration: 2.5, ease: "sine.inOut", yoyo: true, repeat: 1 }, 0.3);
+
+      // Scene 2: Input typing effect (6-13s)
+      tl.from("#scene2 .scene-label", { opacity: 0, x: -30, duration: 0.4, ease: "power2.out" }, 6);
+      tl.from("#scene2 .input-label", { opacity: 0, y: 15, duration: 0.4, ease: "power2.out" }, 6.3);
+      tl.from("#scene2 .input-box", { opacity: 0, y: 20, duration: 0.5, ease: "power2.out" }, 6.5);
+      tl.from("#scene2 .btn-check", { opacity: 0, scale: 0.9, duration: 0.4, ease: "back.out(2)" }, 8.5);
+      // Glow
+      tl.to("#scene2 .glow-1", { opacity: 0.16, duration: 2.5, ease: "sine.inOut" }, 6);
+
+      // Scene 3: Results cards stagger (13-23s)
+      tl.from("#scene3 .scene-label", { opacity: 0, x: -30, duration: 0.4, ease: "power2.out" }, 13);
+      tl.from("#scene3 .result-head", { opacity: 0, y: 15, duration: 0.4, ease: "power2.out" }, 13.3);
+      tl.from("#scene3 .result-status", { opacity: 0, scale: 0.9, duration: 0.4, ease: "back.out(2)" }, 13.6);
+      tl.from("#scene3 .result-card", {
+        opacity: 0, y: 30, duration: 0.5, stagger: 0.12, ease: "power2.out"
+      }, 14.2);
+      tl.to("#scene3 .glow-1", { opacity: 0.16, duration: 3, ease: "sine.inOut" }, 13);
+      tl.to("#scene3 .glow-2", { opacity: 0.14, duration: 3, ease: "sine.inOut" }, 13.5);
+
+      // Scene 4: Report + ending (23-32s)
+      tl.from("#scene4 .scene-label", { opacity: 0, x: -30, duration: 0.4, ease: "power2.out" }, 23);
+      tl.from("#scene4 .report-box", { opacity: 0, y: 30, duration: 0.6, ease: "power2.out" }, 23.4);
+      tl.from("#scene4 .ending-tagline", { opacity: 0, y: 20, duration: 0.5, ease: "power2.out" }, 26.5);
+      tl.from("#scene4 .ending-links", { opacity: 0, duration: 0.5, ease: "power2.out" }, 27);
+      // Final scene fade out
+      tl.to("#scene4", { opacity: 0, duration: 0.6, ease: "power2.in" }, 31.4);
+      tl.set("#scene4", { visibility: "hidden" }, 32);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
