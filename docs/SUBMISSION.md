@@ -33,7 +33,7 @@ https://github.com/AlexNiny/cid-witness
 
 ## Demo video
 
-https://alexniny.github.io/cid-witness/demo-video.html
+https://alexniny.github.io/cid-witness/demo-walkthrough.mp4
 
 ## Public X post
 

@@ -51,11 +51,19 @@ function setApiState(label, tone = "muted") {
   el.apiState.className = `pill ${tone}`;
 }
 
+function showToast(text) {
+  const old = document.querySelector(".copy-toast");
+  if (old) old.remove();
+  const toast = document.createElement("div");
+  toast.className = "copy-toast";
+  toast.textContent = text;
+  document.body.append(toast);
+  setTimeout(() => toast.remove(), 2200);
+}
+
 async function fetchJson(url, options) {
   const response = await fetch(url, options);
-  if (!response.ok) {
-    throw new Error(`${response.status} ${response.statusText}`);
-  }
+  if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
   return response.json();
 }
 
@@ -63,7 +71,6 @@ async function rpc(method, params = []) {
   const body = JSON.stringify({ jsonrpc: "2.0", method, params, id: Date.now() });
   const endpoints = [GLIF_RPC, CHAIN_LOVE_RPC];
   let lastError;
-
   for (const endpoint of endpoints) {
     try {
       const data = await fetchJson(endpoint, {
@@ -73,19 +80,20 @@ async function rpc(method, params = []) {
       });
       if (data.error) throw new Error(data.error.message || "RPC error");
       return data.result;
-    } catch (error) {
-      lastError = error;
-    }
+    } catch (error) { lastError = error; }
   }
-
   throw lastError;
 }
 
+function renderSkeleton(target, width) {
+  target.innerHTML = `<span class="skeleton" style="display:inline-block;width:${width}px;height:28px;vertical-align:middle"></span>`;
+}
+
 async function loadStats() {
-  el.dealCount.textContent = "Loading";
-  el.cidCount.textContent = "Loading";
-  el.latestHeight.textContent = "Loading";
-  el.dataStored.textContent = "Loading";
+  renderSkeleton(el.dealCount, 110);
+  renderSkeleton(el.cidCount, 90);
+  renderSkeleton(el.latestHeight, 100);
+  renderSkeleton(el.dataStored, 80);
 
   const [statsResult, networkResult] = await Promise.allSettled([
     fetchJson(`${FILECOIN_TOOLS}/stats`),
@@ -148,75 +156,60 @@ async function getClientDeals(query) {
 }
 
 async function checkGateway(cid) {
-  const gateways = [
-    `https://${cid}.ipfs.dweb.link/`,
-    `https://ipfs.io/ipfs/${cid}`,
-  ];
-
+  const gateways = [`https://${cid}.ipfs.dweb.link/`, `https://ipfs.io/ipfs/${cid}`];
   for (const url of gateways) {
     try {
       const response = await fetch(url, { method: "HEAD", mode: "cors" });
-      if (response.ok || response.type === "opaque") {
-        return { ok: true, url, status: response.status || "reachable" };
-      }
-    } catch (error) {
-      try {
-        const response = await fetch(url, { method: "GET", mode: "cors", headers: { range: "bytes=0-64" } });
-        if (response.ok) return { ok: true, url, status: response.status };
-      } catch (_) {
-        // Try the next gateway.
-      }
-    }
+      if (response.ok || response.status === 200) return { ok: true, url };
+    } catch { /* try next */ }
   }
-
-  return { ok: false, url: gateways[0], status: "not reachable from this browser" };
+  return { ok: false, url: gateways[0] };
 }
 
-function extractDeals(payload) {
-  if (!payload) return [];
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload.data)) return payload.data;
-  if (payload.data && Array.isArray(payload.data.items)) return payload.data.items;
-  if (payload.id || payload.dealId || payload.pieceCid) return [payload];
+function extractDeals(response) {
+  if (!response) return [];
+  if (Array.isArray(response)) return response;
+  if (response.data) return Array.isArray(response.data) ? response.data : [response.data];
+  if (response.results) return Array.isArray(response.results) ? response.results : [response.results];
+  if (response.deals) return Array.isArray(response.deals) ? response.deals : [response.deals];
+  if (response.id || response.dealId || response.pieceCid) return [response];
   return [];
 }
 
 function dealStatus(deal) {
-  const latest = state.latestHeight;
-  const start = Number(deal.termStart);
-  const term = Number(deal.termMax);
-  if (!latest || !start || !term) return { label: "Indexed", tone: "muted", remaining: "Unknown" };
-  const end = start + term;
-  if (latest < start) return { label: "Scheduled", tone: "warn", remaining: `${formatNumber(start - latest)} epochs until start` };
-  if (latest <= end) return { label: "Active", tone: "good", remaining: `${formatNumber(end - latest)} epochs remaining` };
-  return { label: "Expired", tone: "bad", remaining: `${formatNumber(latest - end)} epochs past end` };
+  const start = Number(deal.termStart || 0);
+  const maxTerm = Number(deal.maxTerm || 0);
+  if (!state.latestHeight || !start) return { label: "Active", remaining: "term details unavailable" };
+  const remaining = start + maxTerm - state.latestHeight;
+  if (remaining <= 0) return { label: "Expired", remaining: "term ended" };
+  return { label: "Active", remaining: `${formatNumber(remaining)} epochs remaining` };
 }
 
-function actorLabel(prefix, value) {
-  if (!value) return "Unknown";
-  return `${prefix}${String(value).replace(/^f0?/, "")}`;
+function actorLabel(prefix, id) {
+  if (!id) return "unknown";
+  const n = String(id).replace(/^f0?/i, "");
+  return `${prefix}${n}`;
 }
 
 function renderDeals(deals) {
   el.dealResults.innerHTML = "";
-  deals.forEach((deal) => {
+  if (!deals.length) return;
+
+  deals.forEach((deal, idx) => {
     const status = dealStatus(deal);
     const card = document.createElement("article");
     card.className = "deal-card";
-    const id = deal.id ?? deal.dealId ?? "Unknown";
-    const provider = actorLabel("f0", deal.providerId);
-    const client = actorLabel("f0", deal.clientId);
-    const pieceCid = deal.pieceCid || "Unknown";
+    card.style.animationDelay = `${idx * 80}ms`;
     card.innerHTML = `
       <div class="deal-title">
-        <strong>Record ${id}</strong>
-        <span class="pill ${status.tone}">${status.label}</span>
+        <strong>${deal.pieceCid ? `Piece ${deal.pieceCid.slice(0, 24)}…` : `Record ${deal.id || deal.dealId || "unknown"}`}</strong>
+        <span class="pill ${status.label === "Active" ? "good" : "warn"}">${status.label}</span>
       </div>
       <div class="kv-grid">
-        <div class="kv"><span>Piece CID</span><strong>${pieceCid}</strong></div>
-        <div class="kv"><span>Claim ID</span><strong>${deal.claimId ?? "Unknown"}</strong></div>
-        <div class="kv"><span>Provider</span><a href="https://filecoin.tools/mainnet/provider/${provider}" target="_blank" rel="noreferrer">${provider}</a></div>
-        <div class="kv"><span>Client</span><a href="https://filecoin.tools/mainnet/client/${client}" target="_blank" rel="noreferrer">${client}</a></div>
+        ${deal.pieceCid ? `<div class="kv"><span>Piece CID</span><strong>${deal.pieceCid}</strong></div>` : ""}
+        ${deal.id || deal.dealId ? `<div class="kv"><span>Record ID</span><strong>${deal.id || deal.dealId}</strong></div>` : ""}
+        ${deal.providerId ? `<div class="kv"><span>Provider</span><a href="https://filecoin.tools/mainnet/provider/${actorLabel("f0", deal.providerId)}" target="_blank" rel="noreferrer">${actorLabel("f0", deal.providerId)}</a></div>` : ""}
+        ${deal.clientId ? `<div class="kv"><span>Client</span><a href="https://filecoin.tools/mainnet/client/${actorLabel("f0", deal.clientId)}" target="_blank" rel="noreferrer">${actorLabel("f0", deal.clientId)}</a></div>` : ""}
         <div class="kv"><span>Term start</span><strong>${formatNumber(deal.termStart)}</strong></div>
         <div class="kv"><span>Term status</span><strong>${status.remaining}</strong></div>
       </div>
@@ -245,7 +238,7 @@ function buildReport(query, deals, gateway) {
     lines.push(`Client: ${actorLabel("f0", first.clientId)}`);
     lines.push(`Status: ${status.label}, ${status.remaining}`);
   } else {
-    lines.push("No Filecoin storage deal record was found for this identifier in the public Filecoin Tools index.");
+    lines.push("No Filecoin storage deal record was found in the public Filecoin Tools index.");
   }
 
   if (gateway) {
@@ -269,7 +262,7 @@ function summarize(query, deals, gateway) {
   }
   if (gateway?.ok) {
     el.resultSummary.classList.add("good");
-    el.resultSummary.querySelector("p").textContent = `No storage market record found, but the IPFS CID is retrievable at ${gateway.url}.`;
+    el.resultSummary.querySelector("p").textContent = `No market record found, but the IPFS CID is retrievable at ${gateway.url}.`;
     return;
   }
   el.resultSummary.classList.add("warn");
@@ -286,7 +279,7 @@ async function handleLookup(event) {
   el.dealResults.innerHTML = "";
   el.copyReport.disabled = true;
   el.reportMeta.textContent = "Working";
-  el.reportText.textContent = "Querying live Filecoin data...";
+  el.reportText.textContent = "Querying live Filecoin data…";
 
   try {
     const tasks = [];
@@ -326,11 +319,7 @@ async function handleLookup(event) {
 async function copyReport() {
   if (!state.lastReport) return;
   await navigator.clipboard.writeText(state.lastReport);
-  const original = el.copyReport.textContent;
-  el.copyReport.textContent = "Copied";
-  window.setTimeout(() => {
-    el.copyReport.textContent = original;
-  }, 1200);
+  showToast("Report copied to clipboard");
 }
 
 document.querySelectorAll("[data-sample]").forEach((button) => {

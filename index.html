@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CID Witness | Filecoin Evidence Composer</title>
+    <title>CID Witness — Filecoin Evidence Composer</title>
     <meta name="description" content="Turn Filecoin piece CIDs, deal IDs, providers, clients, and IPFS CIDs into live evidence packets.">
     <meta property="og:title" content="CID Witness">
     <meta property="og:description" content="A Filecoin-powered evidence composer for storage deals and retrievability.">
@@ -15,7 +15,7 @@
       <div>
         <p class="eyebrow">FilecoinTLDR Builder Challenge</p>
         <h1>CID Witness</h1>
-        <p class="lede">Compose a live Filecoin evidence packet from a piece CID, deal id, provider, client, or IPFS CID.</p>
+        <p class="lede">Compose live Filecoin evidence from a piece CID, deal ID, provider, client, or IPFS CID.</p>
       </div>
       <div class="header-actions">
         <button id="refreshStats" class="icon-button" type="button" title="Refresh Filecoin stats" aria-label="Refresh Filecoin stats">↻</button>
@@ -24,41 +24,43 @@
     </header>
 
     <main>
+      <!-- Network Status -->
       <section class="status-grid" aria-label="Filecoin network status">
         <article class="stat">
           <span class="stat-label">Market deals</span>
-          <strong id="dealCount">Loading</strong>
+          <strong id="dealCount"><span class="skeleton" style="display:inline-block;width:110px;height:28px;vertical-align:middle"></span></strong>
           <span class="stat-note">from Filecoin Tools</span>
         </article>
         <article class="stat">
           <span class="stat-label">Unique CIDs</span>
-          <strong id="cidCount">Loading</strong>
+          <strong id="cidCount"><span class="skeleton" style="display:inline-block;width:90px;height:28px;vertical-align:middle"></span></strong>
           <span class="stat-note">public market index</span>
         </article>
         <article class="stat">
           <span class="stat-label">Latest indexed height</span>
-          <strong id="latestHeight">Loading</strong>
+          <strong id="latestHeight"><span class="skeleton" style="display:inline-block;width:100px;height:28px;vertical-align:middle"></span></strong>
           <span class="stat-note">used for term math</span>
         </article>
         <article class="stat">
           <span class="stat-label">Data stored</span>
-          <strong id="dataStored">Loading</strong>
+          <strong id="dataStored"><span class="skeleton" style="display:inline-block;width:80px;height:28px;vertical-align:middle"></span></strong>
           <span class="stat-note">Filecoin storage market</span>
         </article>
       </section>
 
+      <!-- Evidence Workspace -->
       <section class="workspace">
         <section class="panel search-panel" aria-labelledby="search-title">
           <div class="panel-head">
             <div>
-              <p class="eyebrow">Main mechanic</p>
-              <h2 id="search-title">Build an evidence packet</h2>
+              <p class="eyebrow">Query</p>
+              <h2 id="search-title">Look up an identifier</h2>
             </div>
             <span id="apiState" class="pill muted">Idle</span>
           </div>
 
           <form id="lookupForm" class="lookup-form">
-            <label for="queryInput">Filecoin deal id, claim id, piece CID, provider, client, or IPFS CID</label>
+            <label for="queryInput">Filecoin deal ID, piece CID, claim ID, provider, client, or IPFS CID</label>
             <div class="input-row">
               <input id="queryInput" name="query" autocomplete="off" spellcheck="false" value="baga6ea4seaqgd4bohelctwubfgfmxsfcajhleg5ldsoat7n64q42ru4wlnrr6ka">
               <button class="button primary" type="submit">Check</button>
@@ -66,15 +68,15 @@
           </form>
 
           <div class="quick-actions" aria-label="Example searches">
-            <button type="button" data-sample="baga6ea4seaqgd4bohelctwubfgfmxsfcajhleg5ldsoat7n64q42ru4wlnrr6ka">Sample piece CID</button>
-            <button type="button" data-sample="164167877">Sample deal record</button>
-            <button type="button" data-sample="f03623016">Sample provider</button>
-            <button type="button" data-sample="bafybeigdyrzt5sfp7udm7hu76ocqg65gqpd5u7djepd3n5bubgm2esoszi">Sample IPFS CID</button>
+            <button type="button" data-sample="baga6ea4seaqgd4bohelctwubfgfmxsfcajhleg5ldsoat7n64q42ru4wlnrr6ka">Piece CID</button>
+            <button type="button" data-sample="164167877">Deal record</button>
+            <button type="button" data-sample="f03623016">Provider</button>
+            <button type="button" data-sample="bafybeigdyrzt5sfp7udm7hu76ocqg65gqpd5u7djepd3n5bubgm2esoszi">IPFS CID</button>
           </div>
 
           <div id="emptyState" class="empty-state">
             <strong>Paste a Filecoin or IPFS identifier.</strong>
-            <span>The app queries live Filecoin market data, checks gateway retrieval when possible, and prepares a public showcase note.</span>
+            <span>The app queries live market data and prepares a shareable evidence note.</span>
           </div>
         </section>
 
@@ -96,38 +98,38 @@
 
           <div class="report-block">
             <div class="report-head">
-              <span>Generated showcase note</span>
+              <span>Generated note</span>
               <span id="reportMeta">Not ready</span>
             </div>
-            <pre id="reportText">Run a lookup to generate a concise explanation for README, Loops House, or an X post.</pre>
+            <pre id="reportText">Run a lookup to generate a concise evidence note for a README, submission, or post.</pre>
           </div>
         </section>
       </section>
 
       <section class="panel explain-panel" aria-labelledby="how-title">
         <div>
-          <p class="eyebrow">How it uses Filecoin</p>
-          <h2 id="how-title">Filecoin is part of the product loop</h2>
+          <p class="eyebrow">How it works</p>
+          <h2 id="how-title">Filecoin is the product loop</h2>
         </div>
         <div class="explain-grid">
           <div>
-            <strong>Storage market evidence</strong>
-            <p>Queries Filecoin Tools for public storage deal data: piece CID, provider, client, term start, max term, and active market index stats.</p>
+            <strong>Market evidence</strong>
+            <p>Queries Filecoin Tools for public deal data: piece CID, provider, client, term start, and latest market index.</p>
           </div>
           <div>
             <strong>Retrieval context</strong>
-            <p>For IPFS CIDs, builds live gateway links and checks whether content is retrievable from public gateways.</p>
+            <p>For IPFS CIDs, builds live gateway links and checks whether content is reachable from public gateways.</p>
           </div>
           <div>
             <strong>Shareable proof</strong>
-            <p>Turns raw Filecoin records into a concise, copyable note that explains the mechanic and why the data matters.</p>
+            <p>Turns raw records into a concise copyable note that explains the mechanic and why the data matters.</p>
           </div>
         </div>
       </section>
     </main>
 
     <footer>
-      <span>CID Witness is a static prototype. No wallet, private key, or API key is required.</span>
+      <span>Static prototype — no wallet, key, or backend needed.</span>
       <a href="https://docs.filecoin.cloud/" target="_blank" rel="noreferrer">Filecoin Onchain Cloud docs</a>
     </footer>
 
